@@ -1,0 +1,13 @@
+[Unit]
+Description=Control-M Production Agent
+
+[Service]
+Type=simple
+PIDFile=/var/run/ctmprod.pid
+ExecStart=/var/log/ctm/ctmprod/ctm/scripts/start-ag -u ctmprod -p all
+ExecStop=/var/log/ctm/ctmprod/ctm/scripts/shut-ag -u ctmprod -p all
+RemainAfterExit=yes
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

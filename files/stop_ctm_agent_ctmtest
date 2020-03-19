@@ -1,0 +1,105 @@
+#!/bin/ksh
+#export PATH="/usr/bin:/etc:/usr/sbin:/usr/ucb:/sbin:/usr/local/bin"
+if [ $# -gt 0 ]; then echo "No arguments expected or required!!!"; exit 16; fi
+
+#MAN:7
+#*********************************************************************
+#*.-----------------------------------------------------------------.*
+#*|                                                                 |*
+#*| Function - Script to stop Control-M                             |*
+#*|                                                                 |*
+#*|            No parameters are expected/required                  |*
+#*.-----------------------------------------------------------------.*
+#*|                                                                 |*
+#*| Change Activity Log:                                            |*
+#*|                                                                 |*
+#*| NNNN  DD-MMM-YY  Description                                    |*
+#*| ----  ---------  ---------------------------------------------  |*
+#*| 0000  23-Apr-07  Original by ................ Meindert Boterman |*
+#*| 0001  05-May-16  Add shut-ag ................ Aktar Ali         |*
+#*'-----------------------------------------------------------------'*
+#*********************************************************************
+
+#---------------------------------------------------------------------
+# Perform initialisation
+#---------------------------------------------------------------------
+MyCmd=$(whence   $0)
+MyDir=$(dirname  ${MyCmd})
+MyCmd=$(basename $0)
+MyArgs="$*"
+PATH=${PATH}:${MyDir}
+export PATH
+MyRc=0
+export LOG=${LOG:=/var/log/system/${MyCmd}.$(date "+%Y_%m_%d_%H_%M_%S").log}
+
+DATE=$(date +%d/%m/%y)
+
+echo;echo
+echo "Logging of shutdown in ${LOG}"
+echo;echo
+
+echo "---------------------------------------------------"  >> ${LOG}
+echo "- START -- shutdown on $(date "+%Y-%m-%d %T")      -"  >> ${LOG}
+echo "---------------------------------------------------"  >> ${LOG}
+
+#---------------------------------------------------------------------
+# Display start-up message in the system log
+#---------------------------------------------------------------------
+echo "################################################################" >> ${LOG}
+echo "# Running ${MyDir}/${MyCmd} ${MyArgs}"                            >> ${LOG}
+echo "################################################################" >> ${LOG}
+
+#---------------------------------------------------------------------
+# On exit display termination message into system log.
+#---------------------------------------------------------------------
+trap "terminate;" 0
+function terminate
+{
+  echo "Completed ${MyDir}/${MyCmd}, RC=${MyRc}"  >> ${LOG}
+  echo "Completed ${MyDir}/${MyCmd}, RC=${MyRc}\n\n"
+}
+
+trap "murder;" 1 2 3 15
+function murder
+{
+  MyRc=255
+  echo "${MyDir}/${MyCmd} is being murdered!!!" 1>&2
+  echo "${MyDir}/${MyCmd} is being murdered!!!"   >> ${LOG}
+  exit ${MyRc}
+}
+
+#---------------------------------------------------------------------
+# Ensure NO parameters other than those expected have been passed
+#---------------------------------------------------------------------
+if [ $# -ne 0 ]; then
+  echo "Invalid number of parameters supplied $#, none expected!!!"
+  MyRc=16
+  exit ${MyRc}
+fi
+
+#---------------------------------------------------------------------
+# Stop the Agent
+#---------------------------------------------------------------------
+echo "Shutdown Control-M Agent."
+
+/var/log/ctm/ctmtest/ctm/scripts/shut-ag -u ctmtest -p all
+(( MyRc = MyRc + $? ))
+
+#---------------------------------------------------------------------
+# Check shutdown
+#---------------------------------------------------------------------
+ 
+echo "RC : ${MyRc}" >> ${LOG}
+
+echo "---------------------------------------------------"  >> ${LOG}
+echo "- END ---- startup on   $(date "+%Y-%m-%d %T")    -"  >> ${LOG}
+echo "---------------------------------------------------"  >> ${LOG}
+
+
+cat ${LOG}
+
+exit ${MyRc}
+
+
+
+

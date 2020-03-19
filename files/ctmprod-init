@@ -1,0 +1,82 @@
+#!/bin/bash
+#
+# /etc/init.d/ctmprod
+# Subsystem file for "ctmprod" server
+#
+# chkconfig: 2345 95 05 (1)
+# description: ctmprod server daemon
+#
+# processname: ctmprod
+# config: /etc/ctmprod/mySystem.conf
+# config: /etc/sysconfig/mySystem
+# pidfile: /var/run/ctmprod.pid#
+#
+#
+
+# Source function library.
+
+. /etc/init.d/functions
+
+RETVAL=""
+prog="ctmprod"
+
+ start () {
+
+        echo -n $"Starting $prog:"
+        /var/log/ctm/ctmprod/ctm/scripts/start-ag -u ctmprod -p all
+        RETVAL=$?
+        [ "$RETVAL" = 0 ] && touch /var/lock/subsys/$prog
+        echo
+
+} # start
+
+stop () {
+
+        echo -n $"Stopping $prog:"
+        /var/log/ctm/ctmprod/ctm/scripts/shut-ag -u ctmprod -p all
+        RETVAL=$?
+        [ "$RETVAL" = 0 ] && rm -f /var/lock/subsys/$prog
+        echo
+
+} # stop
+
+
+case "$1" in
+        start)
+                start
+                ;;
+        stop)
+                stop
+                ;;
+        restart)
+                stop
+                start
+                ;;
+        reload)
+                reload
+                ;;
+        condrestart)
+                if [ -f /var/lock/subsys/$prog ] ; then
+                        stop
+                        # avoid race
+                        sleep 3
+                        start
+                fi
+                ;;
+        status)
+                /var/log/ctm/ctmprod/check_agent.sh ctmprod
+                RETVAL=$?
+                #echo $RETVAL
+                    if [ $RETVAL -eq 0 ] ; then
+                    echo -e $"ctmprod running...\t[  \033[0;32mOK\033[0m  ]"
+
+                    else
+                        echo -e  $"ctmprod running...\t[  \033[0;31mFAILED\033[0m  ]"
+                    fi
+                ;;
+        *)
+                echo $"Usage: $0 {start|stop|restart|reload|condrestart|status}"
+                RETVAL=1
+                ;;
+esac
+exit $RETVAL

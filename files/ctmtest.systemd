@@ -1,0 +1,13 @@
+[Unit]
+Description=Control-M Test Agent
+
+[Service]
+Type=simple
+PIDFile=/var/run/ctmtest.pid
+ExecStart=/var/log/ctm/ctmtest/ctm/scripts/start-ag -u ctmtest -p all
+ExecStop=/var/log/ctm/ctmtest/ctm/scripts/shut-ag -u ctmtest -p all
+RemainAfterExit=yes
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
